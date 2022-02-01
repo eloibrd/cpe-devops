@@ -1,0 +1,4 @@
+/home/ailoua/dockerconfig/java-api/simple-api/src/test/java/fr/takima/training/sampleapplication/unit/DepartmentsServiceTest.java
+/home/ailoua/dockerconfig/java-api/simple-api/src/test/java/fr/takima/training/sampleapplication/IT/DepartmentControllerTestIT.java
+/home/ailoua/dockerconfig/java-api/simple-api/src/test/java/fr/takima/training/sampleapplication/unit/StudentsServiceTest.java
+/home/ailoua/dockerconfig/java-api/simple-api/src/test/java/fr/takima/training/sampleapplication/IT/StudentControllerTestIT.java

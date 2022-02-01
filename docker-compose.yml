@@ -1,0 +1,34 @@
+version: '3.7'
+services:
+  backend:
+    container_name:
+      simple-api
+    build:
+      ./java-api/simple-api/
+    networks:
+      - my-app-network
+    depends_on:
+      - database
+  database:
+    container_name: 
+      postgres
+    build:
+      ./psql
+    networks:
+      - my-app-network  
+    volumes:
+      - ~/psqldata/:/var/lib/postgresql/data
+  httpd:
+    container_name: 
+      my-apache-server
+    build:
+      ./apache
+    ports:
+      - "80:80"
+    networks:
+      - my-app-network
+    depends_on:
+      - backend
+      - database
+networks:
+  my-app-network:
