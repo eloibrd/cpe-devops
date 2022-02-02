@@ -21,6 +21,14 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
+      # cache maven
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
       #finally build your app with the latest command
       - name: Build and test with Maven
         run: mvn -B verify sonar:sonar -Dsonar.projectKey=eloibrd_cpe-devops -Dsonar.organization=eloibrd -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{secrets.SONARCLOUD_TOKEN }} --file ./pom.xml
