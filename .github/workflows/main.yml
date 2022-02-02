@@ -25,3 +25,38 @@ jobs:
       - name: Build and test with Maven
         run: mvn clean verify -e -X
         working-directory: simple-api
+
+  # define job to build and publish docker image
+  build-and-push-api-docker-image:
+    needs: test-backend
+      # run only when code is compiling and tests are passing
+    runs-on: ubuntu-latest
+      # steps to perform in job
+    steps:
+      - name: Login to DockerHub
+        run: docker login -u ${{ secrets.DOCKER_USR }} -p ${{secrets.DOCKER_TOKEN}}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build image and push backend
+        uses: docker/build-push-action@v2
+        with:
+          # relative path to the place where source code with Dockerfile is located
+          context: ./simple-api
+          tags: ${{secrets.DOCKER_USR}}/simple-api
+          push: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build image and push database
+        uses: docker/build-push-action@v2
+        with:
+          context: ./psql
+          tags: ${{secrets.DOCKER_USR}}/psql
+          push: ${{ github.ref == 'refs/heads/main' }}
+          
+      - name: Build image and push httpd
+        uses: docker/build-push-action@v2
+        with:
+          context: ./apache
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/my-apache-server
+          push: ${{ github.ref == 'refs/heads/main' }}
