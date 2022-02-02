@@ -4,7 +4,7 @@ services:
     container_name:
       simple-api
     build:
-      ./java-api/simple-api/
+      ./simple-api/
     networks:
       - my-app-network
     depends_on:

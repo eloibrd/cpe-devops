@@ -23,4 +23,5 @@ jobs:
 
       #finally build your app with the latest command
       - name: Build and test with Maven
-        run: mvn clean verify -eX
+        run: cd simple-api
+        run: mvn clean verify -e -X
