@@ -1,4 +1,4 @@
-name: CI devops 2022 CPE EBD
+name: CI/CD devops 2022 CPE EBD
 on:
   #to begin you want to launch this job in main and develop
   push:
@@ -58,5 +58,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./apache
-          tags: ${{secrets.DOCKERHUB_USERNAME}}/my-apache-server
+          tags: ${{secrets.DOCKER_USR}}/my-apache-server
           push: ${{ github.ref == 'refs/heads/main' }}
