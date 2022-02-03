@@ -2,6 +2,7 @@
 # tasks file for roles/app
 - name: Run backend app container
   docker_container:
+    pull: true
     name: simple-api
     image: eloibrd/simple-api
     # ports:
@@ -10,6 +11,7 @@
       - name: app-network 
 - name: Run frontend app container
   docker_container:
+    pull: true
     name: devops-front
     image: eloibrd/devops-front
     # ports:

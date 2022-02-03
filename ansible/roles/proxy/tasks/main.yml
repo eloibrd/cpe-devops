@@ -8,3 +8,4 @@
       - "80:80" # on expose le port http
     networks:
       - name: app-network
+    pull: true
