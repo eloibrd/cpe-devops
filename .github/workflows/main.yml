@@ -53,9 +53,15 @@ jobs:
       - name: Build image and push backend
         uses: docker/build-push-action@v2
         with:
-          # relative path to the place where source code with Dockerfile is located
           context: ./simple-api
           tags: ${{secrets.DOCKER_USR}}/simple-api
+          push: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build image and push frontend
+        uses: docker/build-push-action@v2
+        with:
+          context: ./devops-front
+          tags: ${{secrets.DOCKER_USR}}/devops-front
           push: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Build image and push database

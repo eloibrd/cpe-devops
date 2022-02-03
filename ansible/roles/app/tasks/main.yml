@@ -1,0 +1,18 @@
+---
+# tasks file for roles/app
+- name: Run backend app container
+  docker_container:
+    name: simple-api
+    image: eloibrd/simple-api
+    # ports:
+    #   "8080:8080"
+    networks:
+      - name: app-network 
+- name: Run frontend app container
+  docker_container:
+    name: devops-front
+    image: eloibrd/devops-front
+    # ports:
+    #   "80:80"
+    networks:
+      - name: app-network 

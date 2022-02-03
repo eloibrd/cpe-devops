@@ -1,0 +1,10 @@
+---
+# tasks file for roles/proxy
+- name: Run proxy container
+  docker_container:
+    name: my-apache-server
+    image: eloibrd/my-apache-server
+    ports:
+      - "80:80" # on expose le port http
+    networks:
+      - name: app-network

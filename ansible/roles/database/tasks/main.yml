@@ -1,0 +1,8 @@
+---
+# tasks file for roles/database
+- name: Run database container
+  docker_container:
+    name: postgres
+    image: eloibrd/psql
+    networks:
+      - name: app-network

@@ -9,6 +9,16 @@ services:
       - my-app-network
     depends_on:
       - database
+  frontend:
+    container_name: 
+      devops-front
+    build:
+      ./devops-front/
+    networks:
+      - my-app-network
+    depends_on:
+      - database
+      - backend
   database:
     container_name: 
       postgres
@@ -30,5 +40,6 @@ services:
     depends_on:
       - backend
       - database
+      - frontend
 networks:
   my-app-network:
