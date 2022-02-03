@@ -35,6 +35,7 @@ services:
       ./apache
     ports:
       - "80:80"
+      - "8080:8080"
     networks:
       - my-app-network
     depends_on:
