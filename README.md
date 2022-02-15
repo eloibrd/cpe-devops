@@ -24,17 +24,23 @@ POSTGRES_PASSWORD=pwd
 
 ### Acces avec adminer
 
+On créer un network pour que les container puissent communiquer entre eux :
+
 `docker network create app-network`
 
-Relancer le container psql dans le network qu'on vient de créer
+Relancer le container psql dans le network qu'on vient de créer :
 
 `docker run -p 5432:5432 --network app-network --name postgres psql -d -it`
+
+Installation et build d'adminer :
 
 `docker pull adminer`
 
 `docker build -t adminer adminer`
 
 `docker run -p 8080:8080 --name adminer --network app-network adminer`
+
+On accède à l'interface adminer sur localhost:8080
 
 ### Ajout des scripts sql
 
@@ -55,6 +61,18 @@ Rebuild le container
 Relancer le container Docker avec cette commande
 
 `docker run -p 5432:5432 --network app-network -v ~/psqldata/:/var/lib/postgresql/data --name postgres psql -d -it`
+
+```
+Why should we run the container with a flag -e to give the environment variables ?
+
+On utilise l'option -e pour ne pas écrire les identifiants dans la base de données
+```
+
+```
+Why do we need a volume to be attached to our postgres container ?
+
+Nous utilisons un volume pour stocker la base de données pour éviter que la base et donc toutes les données de l'application soient détruites à chaque redémarrage du container ou a sa suppression
+```
 
 ## Lancement du container Java simple api
 
@@ -203,6 +221,12 @@ Arrêter tout les services :
 
 `docker-compose stop`
 
+```
+Why do we put our images into an online repository ?
+
+Pour pouvoir faire du continuous deployment
+```
+
 # TP 2 - GitHub Actions
 
 ## CI
@@ -212,6 +236,25 @@ Arrêter tout les services :
 Pour lancer les tests de l'application sur la machine :
 
 `mvn clean verify`
+
+```
+mvn clean verify what is it supposed to do ?
+
+Cette commande permet de clean le build précédent et de charger toutes les dépendances, elle joue aussi les tests
+```
+
+```
+Unit tests ? Component test ?
+
+Les tests unitaires visent à tester des composantes individuelles du code et vérifier leurs fonctionnements
+Les tests d'intégrations sont utilisés pour tester les interactions entre les différents modules (après regroupement)
+```
+
+```
+What are testcontainers?
+
+Des container qui servent à jouer les tests JUnit
+```
 
 On créer un répertoire git :
 
@@ -271,6 +314,12 @@ jobs:
 ## CD
 
 ---
+
+```
+Secured variables, why ?
+
+Pour pouvoir utiliser des données sensibles comme des identifiants et mots de passe ou tokens personnels dans les pipeline sans les exposer en dur
+```
 
 On lance les jobs de déploiement des images docker en parallèle en ajoutant ces instructions dans le fichier main.yml, dans les jobs :
 
@@ -354,6 +403,28 @@ On lance les jobs de déploiement des images docker en parallèle en ajoutant ce
           push: ${{ github.ref == 'refs/heads/main' }}
 ```
 
+```
+Why did we put needs: build-and-test-backend on this job?
+
+Pour build l'application afin de pouvoir placer les fichiers dans le container api
+```
+
+## Quality Gate
+
+---
+
+Modifications effectuées dans le pipeline pour que le Sonar se lance à chaque push :
+
+```
+    # build and run maven tests
+      - name: Build and test with Maven
+        run: mvn -B verify sonar:sonar -Dsonar.projectKey=eloibrd_cpe-devops -Dsonar.organization=eloibrd -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{secrets.SONARCLOUD_TOKEN }} --file ./pom.xml
+        working-directory: simple-api
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+```
+
 # TP 3 - Ansible
 
 ## Accès à distance au serveur
@@ -380,6 +451,7 @@ Erreur : il faut fournir la clé ssh pour réaliser des opérations
 `ansible all -m ping --private-key=~/.ssh/takima_key_private -u centos`
 
 ```
+
 centos@eloi.bernard.takima.cloud | SUCCESS => {
     "ansible_facts": {
         "discovered_interpreter_python": "/usr/libexec/platform-python"
@@ -387,6 +459,7 @@ centos@eloi.bernard.takima.cloud | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
+
 ```
 
 ## Inventaire Ansible
@@ -394,13 +467,15 @@ centos@eloi.bernard.takima.cloud | SUCCESS => {
 On créer un fichier inventaire Ansible setup.yml dans le répertoire ansible/inventories/
 
 ```
+
 all:
-  vars:
-    ansible_user: centos
-    ansible_ssh_private_key_file: ~/.ssh/takima_key_private
-  children:
-    prod:
-      hosts: eloi.bernard.takima.cloud
+vars:
+ansible_user: centos
+ansible_ssh_private_key_file: ~/.ssh/takima_key_private
+children:
+prod:
+hosts: eloi.bernard.takima.cloud
+
 ```
 
 On test la configuration avec la comande suivante :
@@ -414,12 +489,14 @@ On test la configuration avec la comande suivante :
 ### Playbook pour ping les hôtes
 
 ```
-- hosts: all
-  gather_facts: false
-  become: yes
-  tasks:
-    - name: Test connection
-      ping:
+
+-   hosts: all
+    gather_facts: false
+    become: yes
+    tasks:
+    -   name: Test connection
+        ping:
+
 ```
 
 Ce playbook permet de ping tout les hôtes présents dans l'inventaire
@@ -459,6 +536,7 @@ tasks:
     - name: Make sure Docker is running
       service: name=docker state=started
       tags: docker
+
 ```
 
 ## Installation par rôles
@@ -472,52 +550,56 @@ On va créer un rôle pour installer docker :
 On déplace les tâches du playbook dans ansible/roles/docker/tasks/main.yml :
 
 ```
+
 # tasks file for roles/docker
 
-- name: Clean packages
-  command:
+-   name: Clean packages
+    command:
     cmd: dnf clean -y packages
 
-- name: Install device-mapper-persistent-data
-  dnf:
+-   name: Install device-mapper-persistent-data
+    dnf:
     name: device-mapper-persistent-data
     state: latest
 
-- name: Install lvm2
-  dnf:
+-   name: Install lvm2
+    dnf:
     name: lvm2
     state: latest
 
-- name: add repo docker
-  command:
+-   name: add repo docker
+    command:
     cmd: sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 
-- name: Install Docker
-  dnf:
+-   name: Install Docker
+    dnf:
     name: docker-ce
     state: present
 
-- name: install python3
-  dnf:
+-   name: install python3
+    dnf:
     name: python3
 
-- name: Pip install
-  pip:
+-   name: Pip install
+    pip:
     name: docker
 
-- name: Make sure Docker is running
-  service: name=docker state=started
-  tags: docker
+-   name: Make sure Docker is running
+    service: name=docker state=started
+    tags: docker
+
 ```
 
 On modifie le playbook.yml pour qu'il prenne en compte le role docker :
 
 ```
-- hosts: all
-  roles:
-    - docker
-  gather_facts: false
-  become: yes
+
+-   hosts: all
+    roles:
+    -   docker
+        gather_facts: false
+        become: yes
+
 ```
 
 On créé les rôles suivants à l'aide de ansible-galaxy :
@@ -532,10 +614,13 @@ On créé les rôles suivants à l'aide de ansible-galaxy :
 ansible/roles/network/tasks/main.yml
 
 ```
+
 # tasks file for roles/network
-- name: create network
- docker_network:
-   name: app-network
+
+-   name: create network
+    docker_network:
+    name: app-network
+
 ```
 
 ### Rôle database
@@ -543,13 +628,15 @@ ansible/roles/network/tasks/main.yml
 ansible/roles/database/tasks/main.yml
 
 ```
+
 # tasks file for roles/database
-- name: Run database container
-  docker_container:
+
+-   name: Run database container
+    docker_container:
     name: postgres
     image: eloibrd/psql
-    networks:
-      - name: app-network
+    networks: - name: app-network
+
 ```
 
 ### Rôle app
@@ -557,16 +644,18 @@ ansible/roles/database/tasks/main.yml
 ansible/roles/app/tasks/main.yml
 
 ```
+
 # tasks file for roles/app
-- name: Run backend app container
-  docker_container:
+
+-   name: Run backend app container
+    docker_container:
     pull: true
     name: simple-api
     image: eloibrd/simple-api
     # ports:
-    #   "8080:8080"
-    networks:
-      - name: app-network
+    # "8080:8080"
+    networks: - name: app-network
+
 ```
 
 ### Rôle proxy
@@ -574,30 +663,33 @@ ansible/roles/app/tasks/main.yml
 ansible/roles/proxy/tasks/main.yml
 
 ```
+
 # tasks file for roles/proxy
-- name: Run proxy container
-  docker_container:
+
+-   name: Run proxy container
+    docker_container:
     name: my-apache-server
     image: eloibrd/my-apache-server
-    ports:
-      - "8080:8080" # on expose l'api
-    networks:
-      - name: app-network
+    ports: - "8080:8080" # on expose l'api
+    networks: - name: app-network
     pull: true
+
 ```
 
 On met à jour le playbook pour qu'il prenne en compte tout les rôles :
 
 ```
-- hosts: all
-  roles:
-    - docker
-    - network
-    - database
-    - app
-    - proxy
-  gather_facts: false
-  become: yes
+
+-   hosts: all
+    roles:
+    -   docker
+    -   network
+    -   database
+    -   app
+    -   proxy
+        gather_facts: false
+        become: yes
+
 ```
 
 ## Ajout du Front-End
@@ -607,17 +699,17 @@ Une fois le front récupéré, on modifie le rôle proxy pour qu'il expose le fr
 ansible/roles/proxy/tasks/main.yml
 
 ```
+
 # tasks file for roles/proxy
-- name: Run proxy container
-  docker_container:
+
+-   name: Run proxy container
+    docker_container:
     name: my-apache-server
     image: eloibrd/my-apache-server
-    ports:
-      - "8080:8080" # on expose l'api
-      - "80:80" # on expose le front
-    networks:
-      - name: app-network
+    ports: - "8080:8080" # on expose l'api - "80:80" # on expose le front
+    networks: - name: app-network
     pull: true
+
 ```
 
 On modifie le rôle app pour qu'il fasse tourner également le front :
@@ -625,39 +717,42 @@ On modifie le rôle app pour qu'il fasse tourner également le front :
 ansible/roles/app/tasks/main.yml
 
 ```
+
 # tasks file for roles/app
-- name: Run backend app container
-  docker_container:
+
+-   name: Run backend app container
+    docker_container:
     pull: true
     name: simple-api
     image: eloibrd/simple-api
     # ports:
-    #   "8080:8080"
-    networks:
-      - name: app-network
-- name: Run frontend app container
-  docker_container:
+    # "8080:8080"
+    networks: - name: app-network
+-   name: Run frontend app container
+    docker_container:
     pull: true
     name: devops-front
     image: eloibrd/devops-front
     # ports:
-    #   "80:80"
-    networks:
-      - name: app-network
+    # "80:80"
+    networks: - name: app-network
+
 ```
 
 Enfin il faut modifier la configuration du proxy apache :
 
 ```
+
 ServerName localhost
-<VirtualHost *:80>
+<VirtualHost _:80>
     ProxyPreserveHost On
     ProxyPass / http://devops-front:80/
     ProxyPassReverse / http://devops-front:80/
 </VirtualHost>
-<VirtualHost *:8080>
+<VirtualHost _:8080>
     ProxyPreserveHost On
     ProxyPass / http://simple-api:8080/
     ProxyPassReverse / http://simple-api:8080/
 </VirtualHost>
+
 ```
