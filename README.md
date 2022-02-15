@@ -304,8 +304,7 @@ jobs:
             ${{ runner.os }}-maven-
       # build and run maven tests
       - name: Build and test with Maven
-        run: mvn -B verify sonar:sonar -Dsonar.projectKey=eloibrd_cpe-devops -Dsonar.organization=eloibrd -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{secrets.SONARCLOUD_TOKEN }} --file ./pom.xml
-        working-directory: simple-api
+        run: mvn clean verify
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
