@@ -307,7 +307,6 @@ jobs:
         run: mvn clean verify
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
 ```
 
 ## CD
